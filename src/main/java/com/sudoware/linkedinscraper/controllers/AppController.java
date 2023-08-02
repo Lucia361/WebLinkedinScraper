@@ -3,8 +3,8 @@ package com.sudoware.linkedinscraper.controllers;
 import com.sudoware.linkedinscraper.helper.PostScraperParameters;
 import com.sudoware.linkedinscraper.helper.ProfileScraperParameters;
 import com.sudoware.linkedinscraper.services.PostService;
+import com.sudoware.linkedinscraper.services.ProfileScraperService;
 import com.sudoware.linkedinscraper.services.ProfileService;
-import com.sudoware.linkedinscraper.services.ScraperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ public class AppController {
 
     @Autowired private PostService postService;
     @Autowired private ProfileService profileService;
-    @Autowired private ScraperService scraperService;
+    @Autowired private ProfileScraperService profileScraperService;
 
     @PostMapping("/profile-scraper")
     public ResponseEntity<?> startProfileScraper(@RequestBody ProfileScraperParameters profileParameters) {

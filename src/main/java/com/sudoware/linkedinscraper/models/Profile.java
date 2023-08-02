@@ -8,6 +8,8 @@ import org.openqa.selenium.WebElement;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,6 +26,10 @@ public class Profile {
     private String link;
     private Boolean isOpenToWork;
 
+    @Getter
+    @Setter
+    private LocalDateTime fetchedAt;
+
     // business logic for fetching information and saving it to database.
     private WebDriverHelper driverHelper;
 
@@ -38,7 +44,7 @@ public class Profile {
     }
 
     /**
-     * Fetches and saves all profile information by calling individual methods.
+     * Fetches all profile information by calling individual methods.
      */
     public void fetchInformation() {
         getName();
@@ -112,7 +118,7 @@ public class Profile {
     }
 
     /**
-     * Gets the profile emial
+     * Gets the profile email
      * @return The profile email or "Unable to get email" if not found.
      */
     public String getEmail() {
@@ -125,7 +131,7 @@ public class Profile {
             // TODO: better handle interruptedException
         }
         WebElement emailElement = driverHelper.getElementIfExist(By.xpath("//section[@class='pv-contact-info__contact-type ci-email']/div/a"));
-        return emailElement != null ? emailElement.getText() : "Unable to get email";
+        return emailElement != null ? this.email = emailElement.getText() : "Unable to get email";
     }
 
     /**
@@ -136,7 +142,7 @@ public class Profile {
     public Boolean isOpenToWork() {
         if(isOpenToWork != null) return isOpenToWork;
         WebElement isOpenToWork = driverHelper.getElementIfExist(By.xpath("//main[@class='scaffold-layout__main']/section/section/div"));
-        return isOpenToWork != null;
+        return this.isOpenToWork = isOpenToWork != null;
     }
 
     /**
