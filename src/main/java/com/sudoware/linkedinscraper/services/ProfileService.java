@@ -9,6 +9,6 @@ import java.util.List;
 public interface ProfileService {
 
     List<Profile> getProfiles();
-    void startScraper(WebDriverHelper driverHelper, ProfileScraperParameters profileParameters);
+    void startScraper(ProfileScraperParameters profileParameters);
 
 }

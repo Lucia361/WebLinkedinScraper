@@ -15,13 +15,17 @@ public class AppController {
     @Autowired private PostService postService;
     @Autowired private ProfileService profileService;
 
+    private final String PROFILE_SCRAPER = "profile-scraper";
+    private final String POST_SCRAPER = "post-scraper";
+
     @PostMapping("/profile-scraper")
-    public ResponseEntity<?> startProfileScraper(@RequestBody ProfileScraperParameters profileParameters) {
-        return null;
+    public ResponseEntity<?> profileScraper(@RequestBody ProfileScraperParameters profileParameters) {
+        profileService.startScraper(profileParameters);
+        return ResponseEntity.ok("Successfully fetched and save profiles to database.");
     }
 
     @PostMapping("/post-scraper")
-    public ResponseEntity<?> startPostScraper(@RequestBody PostScraperParameters postParameters) {
+    public ResponseEntity<?> postScraper(@RequestBody PostScraperParameters postParameters) {
         return null;
     }
 

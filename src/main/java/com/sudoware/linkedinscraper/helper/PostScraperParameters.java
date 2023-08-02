@@ -11,6 +11,7 @@ public class PostScraperParameters {
     private String password;
     private String keywords;
     private Long totalPostsToFetch;
+    private boolean headlessMode;
 
     // additional filters
     private String datePosted;

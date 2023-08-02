@@ -1,5 +1,6 @@
 package com.sudoware.linkedinscraper.services.impl;
 
+import com.sudoware.linkedinscraper.config.ScraperConfig;
 import com.sudoware.linkedinscraper.helper.ProfileScraperFilters;
 import com.sudoware.linkedinscraper.helper.ProfileScraperParameters;
 import com.sudoware.linkedinscraper.helper.WebDriverHelper;
@@ -7,6 +8,7 @@ import com.sudoware.linkedinscraper.models.Profile;
 import com.sudoware.linkedinscraper.repositories.ProfileRepository;
 import com.sudoware.linkedinscraper.services.ProfileService;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,7 +33,8 @@ public class ProfileServiceImpl implements ProfileService {
         Set<Profile> profiles = profileLinks.stream().map(profileLink -> scrapeProfile(driverHelper, profileLink)).collect(Collectors.toSet());
 
         // Add timestamp to each profile after fetching them
-        profiles.forEach(profile -> profile.setFetchedAt(LocalDateTime.now()));
+        LocalDateTime currentTime = LocalDateTime.now();
+        profiles.forEach(profile -> profile.setFetchedAt(currentTime));
 
         return profiles;
     }
@@ -122,15 +125,22 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void startScraper(WebDriverHelper driverHelper, ProfileScraperParameters profileParameters) {
+    public void startScraper(ProfileScraperParameters profileParameters) {
         try {
-
-            this.driverHelper = driverHelper;
+            ScraperConfig config = new ScraperConfig();
+            WebDriver driver = config.setupWebDriver(profileParameters.isHeadlessMode());
+            this.driverHelper = new WebDriverHelper(driver);
 
             boolean isLoggedIn = loginToLinkedIn(profileParameters.getEmail(), profileParameters.getPassword());
             if(!isLoggedIn) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong LinkedIn login credentials.");
             }
+
+            Set<String> profileLinks = retrieveProfileLinks(profileParameters);
+            Set<Profile> profiles = scrapProfiles(profileLinks);
+
+            // save it to database
+            saveToDatabase(profiles);
 
         } catch (InterruptedException e) {
             // TODO: handle the exception better.
