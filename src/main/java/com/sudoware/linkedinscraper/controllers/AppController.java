@@ -23,4 +23,7 @@ public class AppController {
         return null;
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<?> getStatus() { return null; }
+
 }

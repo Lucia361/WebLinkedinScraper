@@ -1,4 +1,4 @@
-package com.sudoware.linkedinscraper.models;
+package com.sudoware.linkedinscraper.helper;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +10,8 @@ public class ProfileScraperParameters {
     private String email;
     private String password;
     private Long totalProfilesToFetch;
+
+    // additional filters.
     private ProfileScraperFilters filters;
 
 }

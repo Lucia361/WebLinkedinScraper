@@ -1,4 +1,4 @@
-package com.sudoware.linkedinscraper.models;
+package com.sudoware.linkedinscraper.helper;
 
 import lombok.Getter;
 import lombok.Setter;
