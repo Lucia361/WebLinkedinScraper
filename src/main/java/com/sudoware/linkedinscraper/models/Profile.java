@@ -3,9 +3,11 @@ package com.sudoware.linkedinscraper.models;
 import com.sudoware.linkedinscraper.helper.WebDriverHelper;
 import lombok.Getter;
 import lombok.Setter;
+import org.bson.types.ObjectId;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -17,7 +19,9 @@ import java.util.Set;
 public class Profile {
 
     @Id
-    private Long id;
+    @Getter
+    @Setter
+    private ObjectId id;
     private String name;
     private String about;
     private String experience;
@@ -31,12 +35,24 @@ public class Profile {
     private LocalDateTime fetchedAt;
 
     // business logic for fetching information and saving it to database.
+
+    @Transient
     private WebDriverHelper driverHelper;
+
+    public Profile (String name, String email, String education, String experience, String about, boolean isOpenToWork) {
+        this.name = name;
+        this.email = email;
+        this.education = education;
+        this.experience = experience;
+        this.about = about;
+        this.isOpenToWork = isOpenToWork;
+    }
 
     public Profile (WebDriverHelper driverHelper, String link) {
         this.link = link;
         this.driverHelper = driverHelper;
         try {
+            driverHelper.getDriver().get(link);
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             // TODO: better handle interrupted exception
@@ -123,7 +139,7 @@ public class Profile {
      */
     public String getEmail() {
         if(this.email != null) return this.email;
-        driverHelper.getDriver().get(link + "overlay/contact-info/");
+        driverHelper.getDriver().get(getLink() + "overlay/contact-info/");
         try {
             // TODO: remove fixed sleeping time
             Thread.sleep(2000);

@@ -47,6 +47,7 @@ public class ProfileServiceImpl implements ProfileService {
 
 
     private String getFilters(ProfileScraperFilters profileFilters) {
+        if (profileFilters == null) return "";
 
         StringJoiner locationsUrns = new StringJoiner("%2C", "&location=", "");
         StringJoiner industriesUrns = new StringJoiner("%2C", "&industry=", "");
@@ -148,15 +149,19 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     // below all methods communicate to database
+
     @Override
     public List<Profile> getProfiles() {
-        return profileRepository.findAll();
+        return (List<Profile>) profileRepository.findAll();
     }
     private void saveToDatabase(Set<Profile> profiles) {
         try {
-            profileRepository.saveAll(profiles);
+            profileRepository.saveAll(profiles.stream().toList());
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fetched all profiles but unable to save it to database.");
+        } finally {
+            driverHelper.getDriver().close();
         }
     }
 }
