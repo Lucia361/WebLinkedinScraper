@@ -1,13 +1,18 @@
 package com.sudoware.linkedinscraper.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sudoware.linkedinscraper.helper.WebDriverHelper;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -16,12 +21,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Document(collection = "profiles")
+@NoArgsConstructor
+@Getter
+@Setter
 public class Profile {
 
     @Id
-    @Getter
-    @Setter
-    private ObjectId id;
+    private String id;
     private String name;
     private String about;
     private String experience;
@@ -30,13 +36,13 @@ public class Profile {
     private String link;
     private Boolean isOpenToWork;
 
-    @Getter
-    @Setter
-    private LocalDateTime fetchedAt;
+    @DBRef
+    @JsonIgnoreProperties({"posts"})
+    private Search search;
 
-    // business logic for fetching information and saving it to database.
-
+    // below business logic for fetching information..
     @Transient
+    @JsonIgnore
     private WebDriverHelper driverHelper;
 
     public Profile (String name, String email, String education, String experience, String about, boolean isOpenToWork) {
@@ -59,87 +65,84 @@ public class Profile {
         }
     }
 
+
     /**
      * Fetches all profile information by calling individual methods.
      */
     public void fetchInformation() {
-        getName();
-        getAbout();
-        getExperience();
-        getEducation();
-        isOpenToWork();
+        fetchName();
+        fetchAbout();
+        fetchExperience();
+        fetchEducation();
+        fetchOpenToWork();
 
         // always fetch email in the last.
-        getEmail();
+        fetchEmail();
     }
 
     /**
-     * Gets the profile name.
+     * Fetch the profile name.
      *
      * @return The profile name or "Unable to get profile name" if not found.
      */
-    public String getName() {
-        if(name != null) return name;
-
+    @JsonIgnore
+    private String fetchName() {
         WebElement profileNameElement = driverHelper.getElementIfExist(By.xpath("//h1[@class='text-heading-xlarge inline t-24 v-align-middle break-words']"));
         if (profileNameElement == null) return "Unable to get profile name";
 
-        name = profileNameElement.getText();
-        return name;
+        this.name = profileNameElement.getText();
+        return this.name;
     }
 
     /**
-     * Gets the profile description.
+     * Fetch the profile description.
      *
      * @return The profile description or "Unable to get profile description" if not found.
      */
-    public String getAbout() {
-        if(about != null) return about;
-
+    @JsonIgnore
+    public String fetchAbout() {
         WebElement descriptionElement = driverHelper.getElementIfExist(By.xpath("//div[@class='text-body-medium break-words']"));
         if(descriptionElement == null) return "Unable to get profile description";
 
-        about = removeDuplicateLines(descriptionElement.getText());
-        return about;
+        this.about = removeDuplicateLines(descriptionElement.getText());
+        return this.about;
     }
 
     /**
-     * Gets the profile experience.
+     * fetch the profile experience.
      *
      * @return The profile experience or "Unable to get experience" if not found.
      */
-    public String getExperience() {
-        if(this.experience != null) return experience;
-
+    @JsonIgnore
+    public String fetchExperience() {
         WebElement experienceElement = driverHelper.getElementIfExist(By.id("experience"));
         if(experienceElement == null) return "Unable to get experience";
 
-        experience = removeDuplicateLines(experienceElement.findElement(By.xpath("./parent::*")).getText());
-        return experience;
+        this.experience = removeDuplicateLines(experienceElement.findElement(By.xpath("./parent::*")).getText());
+        return this.experience;
     }
 
     /**
-     * Gets the profile education.
+     * fetch the profile education.
      *
      * @return The profile education or "Unable to get education" if not found.
      */
-    public String getEducation() {
-        if(this.education != null) return education;
-
+    @JsonIgnore
+    public String fetchEducation() {
         WebElement educationElement = driverHelper.getElementIfExist(By.id("education"));
         if(educationElement == null) return "Unable to get education";
 
-        education = removeDuplicateLines(educationElement.findElement(By.xpath("./parent::*")).getText());
-        return education;
+        this.education = removeDuplicateLines(educationElement.findElement(By.xpath("./parent::*")).getText());
+        return this.education;
     }
 
     /**
-     * Gets the profile email
+     * fetch the profile email
      * @return The profile email or "Unable to get email" if not found.
      */
-    public String getEmail() {
-        if(this.email != null) return this.email;
-        driverHelper.getDriver().get(getLink() + "overlay/contact-info/");
+    @JsonIgnore
+    public String fetchEmail() {
+        driverHelper.getDriver().get(fetchProfileLink() + "overlay/contact-info/");
         try {
             // TODO: remove fixed sleeping time
             Thread.sleep(2000);
@@ -147,7 +150,9 @@ public class Profile {
             // TODO: better handle interruptedException
         }
         WebElement emailElement = driverHelper.getElementIfExist(By.xpath("//section[@class='pv-contact-info__contact-type ci-email']/div/a"));
-        return emailElement != null ? this.email = emailElement.getText() : "Unable to get email";
+        if (emailElement != null)
+            return this.email = emailElement.getText();
+        return "Unable to get email address.";
     }
 
     /**
@@ -155,18 +160,19 @@ public class Profile {
      *
      * @return True if open to work, false otherwise.
      */
-    public Boolean isOpenToWork() {
-        if(isOpenToWork != null) return isOpenToWork;
+    @JsonIgnore
+    public Boolean fetchOpenToWork() {
         WebElement isOpenToWork = driverHelper.getElementIfExist(By.xpath("//main[@class='scaffold-layout__main']/section/section/div"));
         return this.isOpenToWork = isOpenToWork != null;
     }
 
     /**
-     * Gets the profile link.
+     * fetch the profile link.
      *
      * @return The profile link.
      */
-    public String getLink() {
+    @JsonIgnore
+    public String fetchProfileLink() {
         return driverHelper.getDriver().getCurrentUrl();
     }
 
@@ -176,6 +182,7 @@ public class Profile {
      * @param str The input string.
      * @return The string with duplicate words removed.
      */
+    @JsonIgnore
     private static String removeDuplicateLines(String str) {
         if (str == null) return "";
 

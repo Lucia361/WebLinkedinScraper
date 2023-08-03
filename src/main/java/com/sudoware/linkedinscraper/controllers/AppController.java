@@ -2,11 +2,17 @@ package com.sudoware.linkedinscraper.controllers;
 
 import com.sudoware.linkedinscraper.helper.PostScraperParameters;
 import com.sudoware.linkedinscraper.helper.ProfileScraperParameters;
+import com.sudoware.linkedinscraper.models.Profile;
+import com.sudoware.linkedinscraper.models.Search;
 import com.sudoware.linkedinscraper.services.PostService;
 import com.sudoware.linkedinscraper.services.ProfileService;
+import com.sudoware.linkedinscraper.services.SearchService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -14,6 +20,7 @@ public class AppController {
 
     @Autowired private PostService postService;
     @Autowired private ProfileService profileService;
+    @Autowired private SearchService searchService;
 
     private final String PROFILE_SCRAPER = "profile-scraper";
     private final String POST_SCRAPER = "post-scraper";
@@ -22,6 +29,18 @@ public class AppController {
     public ResponseEntity<?> profileScraper(@RequestBody ProfileScraperParameters profileParameters) {
         profileService.startScraper(profileParameters);
         return ResponseEntity.ok("Successfully fetched and save profiles to database.");
+    }
+
+    @GetMapping("/profiles-searches")
+    public ResponseEntity<?> getProfileSearches() {
+        List<Search> searches = searchService.getProfileSearches();
+        return ResponseEntity.ok(searches);
+    }
+
+    @GetMapping("/view-profiles/{searchId}")
+    public ResponseEntity<?> getProfilesBySearch(@PathVariable("searchId") String id) {
+       List<Profile> profiles = searchService.getProfilesBySearch(id);
+       return ResponseEntity.ok(profiles);
     }
 
     @PostMapping("/post-scraper")

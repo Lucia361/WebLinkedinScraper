@@ -7,22 +7,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
 
-    <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
     <title>Linkedin Scraper</title>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">Linkedin Scraper</a>
+        <a class="navbar-brand text-white" href="/">Linkedin Scraper</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav ms-auto">
                 <a class="nav-link active" aria-current="page" href="/">
-                    <button class="btn btn-sm btn-primary">Profile Scraper</button></a>
+                    <button class="btn btn-sm btn-light">Profile Scraper</button></a>
                 <a class="nav-link" href="/post-scraper">
-                    <button class="btn btn-sm btn-primary">Post Scraper</button></a>
+                    <button class="btn btn-sm btn-light">Post Scraper</button></a>
             </div>  
         </div>
     </div>
@@ -33,9 +33,19 @@
         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#profile-scraper-modal">Open Profile Scraper</button>
     </div>
     <div class="card">
-        <div class="card-header h5">Profiles Data</div>
+        <div class="card-header h5">Searches</div>
         <div class="card-body">
-
+            <table class="table text-center">
+                <thead>
+                  <tr>
+                    <th scope="col">#Id</th>
+                    <th scope="col">Search on</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="profiles-searches-tbody">
+                </tbody>
+              </table>
         </div>
     </div>
 
@@ -129,13 +139,40 @@
           </div>
         </div>
       </div>
+</div>
 
+<div class="modal fade" id="profiles-by-search-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="profiles-by-search-title">Data from Search</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">About</th>
+                            <th scope="col">Experience</th>
+                            <th scope="col">Education</th>
+                            <th scope="col">Open to work</th>
+                            <th scope="col">Link</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profiles-by-search-result"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>
-<script src="../static/js/script.js"></script>
+<script src="js/script.js"></script>
 
 </body>
 </html>

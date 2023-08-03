@@ -5,14 +5,18 @@ import com.sudoware.linkedinscraper.helper.ProfileScraperFilters;
 import com.sudoware.linkedinscraper.helper.ProfileScraperParameters;
 import com.sudoware.linkedinscraper.helper.WebDriverHelper;
 import com.sudoware.linkedinscraper.models.Profile;
+import com.sudoware.linkedinscraper.models.Search;
 import com.sudoware.linkedinscraper.repositories.ProfileRepository;
 import com.sudoware.linkedinscraper.services.ProfileService;
+import com.sudoware.linkedinscraper.services.SearchService;
+import org.bson.types.ObjectId;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -26,20 +30,15 @@ import java.util.stream.Collectors;
 public class ProfileServiceImpl implements ProfileService {
 
     @Autowired private ProfileRepository profileRepository;
+    @Autowired private SearchService searchService;
 
     private WebDriverHelper driverHelper;
 
     private Set<Profile> scrapProfiles(Set<String> profileLinks) throws InterruptedException {
-        Set<Profile> profiles = profileLinks.stream().map(profileLink -> scrapeProfile(driverHelper, profileLink)).collect(Collectors.toSet());
-
-        // Add timestamp to each profile after fetching them
-        LocalDateTime currentTime = LocalDateTime.now();
-        profiles.forEach(profile -> profile.setFetchedAt(currentTime));
-
-        return profiles;
+        return profileLinks.stream().map((profileLink) -> scrapeProfile(profileLink)).collect(Collectors.toSet());
     }
 
-    private Profile scrapeProfile(WebDriverHelper driverHelper, String profileLink) {
+    private Profile scrapeProfile(String profileLink) {
         Profile profile = new Profile(driverHelper, profileLink);
         profile.fetchInformation();
         return profile;
@@ -143,8 +142,10 @@ public class ProfileServiceImpl implements ProfileService {
             // save it to database
             saveToDatabase(profiles);
 
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             // TODO: handle the exception better.
+        } finally {
+            driverHelper.getDriver().close();
         }
     }
 
@@ -152,16 +153,29 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public List<Profile> getProfiles() {
-        return (List<Profile>) profileRepository.findAll();
+        return profileRepository.findAll();
     }
+
+    @Transactional
     private void saveToDatabase(Set<Profile> profiles) {
         try {
-            profileRepository.saveAll(profiles.stream().toList());
+
+            Search search = new Search();
+            search.setSearchedAt(LocalDateTime.now());
+            search.setId(new ObjectId().toString());
+
+            Set<Profile> updatedProfiles = profiles.stream()
+                    .peek((profile) -> profile.setSearch(search))
+                    .collect(Collectors.toSet());
+
+            profileRepository.saveAll(updatedProfiles);
+
+            search.setProfiles(updatedProfiles.stream().toList());
+            searchService.saveSearch(search);
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fetched all profiles but unable to save it to database.");
-        } finally {
-            driverHelper.getDriver().close();
         }
     }
 }
