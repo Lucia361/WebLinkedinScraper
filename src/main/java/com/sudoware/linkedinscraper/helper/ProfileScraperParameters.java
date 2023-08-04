@@ -10,7 +10,7 @@ public class ProfileScraperParameters {
     private String email;
     private String password;
     private Long totalProfilesToFetch;
-    private boolean headlessMode;
+    private boolean headlessMode = false;
 
     // additional filters.
     private ProfileScraperFilters filters;
