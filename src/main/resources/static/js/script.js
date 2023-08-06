@@ -17,22 +17,32 @@ $(document).ready(() => {
 
     getProfilesSearches();
 
+    document.getElementById("start-profile-scraper").addEventListener("click", (event) => startProfileScraper(event));
+
 })
 
+let profileSearchIds = new Set(); // To store existing profile search IDs
+
 const getProfilesSearches = () => {
-    fetch('/api/v1/profiles-searches').then((response) => response.json()).then((data) => {
-        console.log("data searches:", data);
+    fetch('/api/v1/profiles-searches')
+    .then((response) => response.json()).then((data) => {
         const tableBody = document.getElementById("profiles-searches-tbody");
         data.forEach((search, index) => {
-            const newRow = tableBody.insertRow();
-            newRow.innerHTML = `
-           <td>${index + 1}</td>
-           <td>${getFormattedDate(search.searchedAt)}</td>
-           <td><button class="btn btn-sm btn-primary" onclick="viewProfiles('${search.id}')" >View Profiles</button></td>
-           `;
-        })
+            if (!profileSearchIds.has(search.id)) {
+                profileSearchIds.add(search.id);
+                const newRow = tableBody.insertRow();
+                newRow.innerHTML = `
+                   <td>${index + 1}</td>
+                   <td>${getFormattedDate(search.searchedAt)}</td>
+                   <td><button class="btn btn-sm btn-primary" onclick="viewProfiles('${search.id}')" >View Profiles</button></td>
+               `;
+            }
+        });
+    })
+    .catch((error) => {
+        console.log("Error fetching profiles searches:", error);
     });
-}
+};
 
 const getPostsSearches = () => {
     fetch('/profiles-searches').then((response) => response.json()).then((data) => {
@@ -86,4 +96,59 @@ const getFormattedDate = (date) => {
     function padWithZero(number) {
         return number.toString().padStart(2, '0');
     }
+}
+
+const startProfileScraper = (event) => {
+        event.preventDefault();
+
+        let selectedLocations = []
+        let selectedIndustries = []
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const totalProfilesToFetch = document.getElementById("totalProfilesToFetch").value;
+
+        const firstConnection = document.getElementById('con1').checked;
+        const secondConnection = document.getElementById('con2').checked;
+        const thirdConnection = document.getElementById('con3').checked;
+
+        console.log("first connection checked: ", firstConnection)
+
+        const locations = document.getElementById("selected-locations").selectedOptions;
+        for(let option of locations) {
+          selectedLocations.push(option.value);
+        }
+
+        const industries = document.getElementById("selected-industries").selectedOptions;
+        for(let option of industries) {
+          selectedIndustries.push(option.value)
+        }
+
+        const requestedData = {
+            email: email,
+            password: password,
+            totalProfilesToFetch: totalProfilesToFetch,
+            headlessMode: false,
+            filters: {
+                isFirstConnectionChecked: firstConnection,
+                isSecondConnectionChecked: secondConnection,
+                isThirdConnectionChecked: thirdConnection,
+                selectedLocations: selectedLocations,
+                selectedIndustries: selectedIndustries,
+            }
+        };
+    
+
+        fetch('/api/v1/profile-scraper', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestedData)
+        }).then((response) => response.text).then((response) => {
+            getProfilesSearches();
+        }).catch((error) => {
+            console.log(error);
+        })
 }

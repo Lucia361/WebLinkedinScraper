@@ -89,19 +89,19 @@
                     <div class="col-md-4">
                         <label class="connection-type-filters">
                             1st Connection
-                            <input type="checkbox">
+                            <input type="checkbox" id="con1">
                             <span class="checkmark"></span>
                         </label>
                     </div>
                     <div class="col-md-4">
                         <label class="connection-type-filters">
                             2nd Connection
-                            <input type="checkbox">
+                            <input type="checkbox" id="con2">
                             <span class="checkmark"></span>
                         </label>
                     </div>
                     <div class="col-md-4">
-                        <label class="connection-type-filters">
+                        <label class="connection-type-filters" id="con3">
                             3rd Connection
                             <input type="checkbox">
                             <span class="checkmark"></span>
@@ -113,9 +113,9 @@
                 <div class="col-md-12">
                     <div class="form-floating mb-3">
                         <select id="selected-locations" placeholder="Select locations" multiple>
-                            <option value="">Karachi</option>
-                            <option value="">Islamabad</option>
-                            <option value="">Lahore</option>
+                            <option value="105451800">Karachi</option>
+                            <option value="102866583">Islamabad</option>
+                            <option value="104112529">Lahore</option>
                         </select> 
                     </div>
                 </div>
@@ -123,15 +123,15 @@
                 <div class="col-md-12">
                     <div class="form-floating mb-3">
                         <select id="selected-industries" placeholder="Select industries" multiple>
-                            <option value="">IT Services and IT Consulting</option>
-                            <option value="">Technology, Information and Media</option>
-                            <option value="">Software Development</option>
+                            <option value="96">IT Services and IT Consulting</option>
+                            <option value="6">Technology, Information and Media</option>
+                            <option value="4">Software Development</option>
                         </select> 
                     </div>
                 </div>
 
                 <div class="container">
-                    <button type="submit" class="btn btn-primary">Start Scraper</button>
+                    <button type="submit" class="btn btn-primary" id="start-profile-scraper">Start Scraper</button>
                 </div>
                 
               </form>
