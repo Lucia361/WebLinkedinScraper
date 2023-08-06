@@ -45,7 +45,8 @@ public class AppController {
 
     @PostMapping("/post-scraper")
     public ResponseEntity<?> postScraper(@RequestBody PostScraperParameters postParameters) {
-        return null;
+        postService.startScraper(postParameters);
+        return ResponseEntity.ok("Successfully fetched and save posts to database");
     }
 
     @GetMapping("/status/{scraper-type}")

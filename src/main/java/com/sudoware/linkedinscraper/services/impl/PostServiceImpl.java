@@ -1,5 +1,6 @@
 package com.sudoware.linkedinscraper.services.impl;
 
+import com.sudoware.linkedinscraper.config.ScraperConfig;
 import com.sudoware.linkedinscraper.helper.PostScraperParameters;
 import com.sudoware.linkedinscraper.helper.WebDriverHelper;
 import com.sudoware.linkedinscraper.models.Post;
@@ -9,6 +10,7 @@ import com.sudoware.linkedinscraper.services.PostService;
 import com.sudoware.linkedinscraper.services.SearchService;
 import org.bson.types.ObjectId;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,6 +47,7 @@ public class PostServiceImpl implements PostService {
         long totalPostsToRetrieve = postParameters.getTotalPostsToFetch();
         String filters = getFilters(postParameters.getDatePosted(), postParameters.getSortBy());
         String keywords = postParameters.getKeywords();
+        if (keywords == null) keywords = "";
 
         while (postsRetrieved < totalPostsToRetrieve || totalPostsToRetrieve == -1) {
             driverHelper.getDriver().get(String.format("https://www.linkedin.com/search/results/content/?page=%d&keywords=%s%s", pageToGoNext, keywords, filters));
@@ -55,8 +58,10 @@ public class PostServiceImpl implements PostService {
                 break;
             }
 
+            final String finalKeywords = keywords;
             List<WebElement> postsElements = driverHelper.getElementsIfExists(By.xpath("//div[contains(@class, 'feed-shared-update-v2 feed-shared-update-v2--minimal-padding')]"));
-            posts = postsElements.stream().map((postElement) -> extractPostInformation(postElement, keywords)).collect(Collectors.toSet());
+            posts = postsElements.stream().map((postElement) -> extractPostInformation(postElement, finalKeywords)).collect(Collectors.toSet());
+            postsRetrieved = posts.size();
             pageToGoNext++;
 
         }
@@ -91,6 +96,10 @@ public class PostServiceImpl implements PostService {
     @Override
     public void startScraper(PostScraperParameters postsParameters) {
         try {
+
+            ScraperConfig config = new ScraperConfig();
+            WebDriver driver = config.setupWebDriver(postsParameters.isHeadlessMode());
+            this.driverHelper = new WebDriverHelper(driver);
 
             boolean isLoggedIn = loginToLinkedIn(postsParameters.getEmail(), postsParameters.getPassword());
             if(!isLoggedIn) {
