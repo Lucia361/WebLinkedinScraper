@@ -9,9 +9,9 @@ import java.util.List;
 @Setter
 public class ProfileScraperFilters {
 
-    private boolean isFirstConnectionChecked;
-    private boolean isSecondConnectionChecked;
-    private boolean isThirdConnectionChecked;
+    private Boolean isFirstConnectionChecked;
+    private Boolean isSecondConnectionChecked;
+    private Boolean isThirdConnectionChecked;
 
     private List<String> selectedLocations;
     private List<String> selectedIndustries;

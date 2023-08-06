@@ -20,10 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,23 +45,50 @@ public class ProfileServiceImpl implements ProfileService {
     private String getFilters(ProfileScraperFilters profileFilters) {
         if (profileFilters == null) return "";
 
-        StringJoiner locationsUrns = new StringJoiner("%2C", "&location=", "");
-        StringJoiner industriesUrns = new StringJoiner("%2C", "&industry=", "");
-        StringJoiner connectionFilter = new StringJoiner("%2C", "&network=%5B", "%5D");
+        StringBuilder connectionFilter = new StringBuilder();
 
-        if (profileFilters.isFirstConnectionChecked()) connectionFilter.add("%22F%22");
-        if (profileFilters.isSecondConnectionChecked()) connectionFilter.add("%22S%22");
-        if (profileFilters.isThirdConnectionChecked()) connectionFilter.add("%22O%22");
 
-        for (String location : profileFilters.getSelectedLocations()) {
-            locationsUrns.add(String.format("%22%s%22", location));
+        Boolean[] connectionChecked = {
+                profileFilters.getIsFirstConnectionChecked(),
+                profileFilters.getIsSecondConnectionChecked(),
+                profileFilters.getIsThirdConnectionChecked()
+        };
+
+        if (Arrays.stream(connectionChecked).anyMatch(c -> c)) {
+            connectionFilter.append("&network=%5B");
+            boolean isFirst = true;
+
+            String[] connectionTypes = {"F", "S", "O"};
+
+            for (int i = 0; i < connectionChecked.length; i++) {
+                if (connectionChecked[i] != null && connectionChecked[i]) {
+                    if (!isFirst) {
+                        connectionFilter.append("%2C");
+                    }
+                    connectionFilter.append("%22").append(connectionTypes[i]).append("%22");
+                    isFirst = false;
+                }
+            }
+
+            connectionFilter.append("%5D");
         }
 
-        for (String industry : profileFilters.getSelectedIndustries()) {
-            industriesUrns.add(String.format("%22%s%22", industry));
+        String industriesFilter = "";
+        String locationsFilter = "";
+
+        if(profileFilters.getSelectedLocations().size() > 0) {
+             locationsFilter = profileFilters.getSelectedLocations().stream()
+                    .map(location -> "%22" + location + "%22")
+                    .collect(Collectors.joining("%2C", "&location=", ""));
         }
 
-        return connectionFilter.toString() + locationsUrns.toString() + industriesUrns.toString();
+        if (profileFilters.getSelectedIndustries().size() > 0) {
+             industriesFilter = profileFilters.getSelectedIndustries().stream()
+                    .map(industry -> "%22" + industry + "%22")
+                    .collect(Collectors.joining("%2C", "&industry=", ""));
+        }
+
+        return connectionFilter + locationsFilter + industriesFilter;
     }
 
     private Set<String> retrieveProfileLinks(ProfileScraperParameters profileParameters) throws InterruptedException {
@@ -85,7 +109,6 @@ public class ProfileServiceImpl implements ProfileService {
             pageToGoNext++;
 
             List<WebElement> profilesElements = driverHelper.getDriver().findElements(By.xpath("//a[contains(@class, 'app-aware-link') and contains(@href, '/in/')]"));
-
 
             for (WebElement profileElement : profilesElements) {
                 String profileLink = profileElement.getAttribute("href");
@@ -143,6 +166,7 @@ public class ProfileServiceImpl implements ProfileService {
             saveToDatabase(profiles);
 
         } catch (Exception e) {
+            e.printStackTrace();
             // TODO: handle the exception better.
         } finally {
             driverHelper.getDriver().close();
