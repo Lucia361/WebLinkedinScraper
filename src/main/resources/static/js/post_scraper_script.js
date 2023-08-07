@@ -8,6 +8,7 @@ $('document').ready(() => {
 })
 
 let postSearchIds = new Set();
+let statusMessages = []
 
 const getPostsSearches = () => {
     fetch('/api/v1/posts-searches').then((response) => response.json()).then((data) => {
