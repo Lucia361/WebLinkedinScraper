@@ -30,6 +30,9 @@ public class PostServiceImpl implements PostService {
     @Autowired private SearchService searchService;
     private WebDriverHelper driverHelper;
 
+    private String currentStatus = "";
+    private boolean isScraperRunning = false;
+
     private String getFilters(String datePosted, String sortBy) {
         StringBuilder filters = new StringBuilder();
         filters.append(datePosted != null ? "&datePosted=%22" + datePosted + "%22"  : "");
@@ -38,6 +41,7 @@ public class PostServiceImpl implements PostService {
     }
 
     private Set<Post> fetchPosts(PostScraperParameters postParameters) throws InterruptedException {
+        this.currentStatus = String.format("Retrieving %s posts. (it might take some time)", postParameters.getTotalPostsToFetch());
 
         Set<Post> posts = new HashSet<>();
 
@@ -60,6 +64,8 @@ public class PostServiceImpl implements PostService {
 
             final String finalKeywords = keywords;
             List<WebElement> postsElements = driverHelper.getElementsIfExists(By.xpath("//div[contains(@class, 'feed-shared-update-v2 feed-shared-update-v2--minimal-padding')]"));
+            this.currentStatus = "Extracting required information from each post.. (it might take some times)";
+
             posts = postsElements.stream().map((postElement) -> extractPostInformation(postElement, finalKeywords)).collect(Collectors.toSet());
             postsRetrieved = posts.size();
             pageToGoNext++;
@@ -101,25 +107,45 @@ public class PostServiceImpl implements PostService {
             WebDriver driver = config.setupWebDriver(postsParameters.isHeadlessMode());
             this.driverHelper = new WebDriverHelper(driver);
 
+            this.isScraperRunning = true;
+            this.currentStatus = "Scraper started, logging into linkedin account.";
+
             boolean isLoggedIn = loginToLinkedIn(postsParameters.getEmail(), postsParameters.getPassword());
             if(!isLoggedIn) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong LinkedIn login credentials.");
             }
 
+            this.currentStatus = "Logged in to linkedin successfully...";
             Set<Post> posts = fetchPosts(postsParameters);
+
+            // save fetched posts to database
             saveToDatabase(posts);
+            this.currentStatus = "Successfully saved fetched posts into database. Shutting down scraper";
+            this.isScraperRunning = false;
+
         } catch (Exception e) {
-            // TODO: flag scraper as stopped.
+            this.currentStatus = "Something unexpected went wrong. Shutting down scraper...";
+            this.isScraperRunning = false;
         } finally {
             driverHelper.getDriver().close();
         }
+    }
+
+    @Override
+    public String getStatus() {
+        return currentStatus;
+    }
+
+    @Override
+    public boolean isScraperIsCurrentlyRunning() {
+        return this.isScraperRunning;
     }
 
     // below all methods communicate to database.
 
     private void saveToDatabase (Set<Post> posts) {
         try {
-
+            this.currentStatus = "Saving fetched posts to database...";
             Search search = new Search();
             search.setSearchedAt(LocalDateTime.now());
             search.setId(new ObjectId().toString());

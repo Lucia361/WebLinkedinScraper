@@ -11,4 +11,7 @@ public interface ProfileService {
     List<Profile> getProfiles();
     void startScraper(ProfileScraperParameters profileParameters);
 
+    String getStatus();
+    boolean isScraperCurrentlyRunning();
+
 }

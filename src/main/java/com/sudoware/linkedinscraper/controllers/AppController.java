@@ -2,6 +2,7 @@ package com.sudoware.linkedinscraper.controllers;
 
 import com.sudoware.linkedinscraper.helper.PostScraperParameters;
 import com.sudoware.linkedinscraper.helper.ProfileScraperParameters;
+import com.sudoware.linkedinscraper.helper.StatusResponse;
 import com.sudoware.linkedinscraper.models.Post;
 import com.sudoware.linkedinscraper.models.Profile;
 import com.sudoware.linkedinscraper.models.Search;
@@ -9,6 +10,7 @@ import com.sudoware.linkedinscraper.services.PostService;
 import com.sudoware.linkedinscraper.services.ProfileService;
 import com.sudoware.linkedinscraper.services.SearchService;
 import org.apache.coyote.Response;
+import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,8 +67,18 @@ public class AppController {
     }
 
     @GetMapping("/status/{scraper-type}")
-    public ResponseEntity<?> getStatus(@PathVariable String scraperType) {
-        return null;
+    public ResponseEntity<?> getStatus(@PathVariable("scraper-type") String scraperType) {
+        StatusResponse response = new StatusResponse();
+
+        if(scraperType.equals(PROFILE_SCRAPER)) {
+            response.setStatus(profileService.getStatus());
+            response.setScraperRunning(profileService.isScraperCurrentlyRunning());
+        } else {
+            response.setStatus(postService.getStatus());
+            response.setScraperRunning(postService.isScraperIsCurrentlyRunning());
+        }
+
+        return ResponseEntity.ok(response);
     }
 
 }

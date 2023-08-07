@@ -31,7 +31,11 @@ public class ProfileServiceImpl implements ProfileService {
 
     private WebDriverHelper driverHelper;
 
+    private String currentStatus = "";
+    private boolean isScraperRunning = false;
+
     private Set<Profile> scrapProfiles(Set<String> profileLinks) throws InterruptedException {
+        this.currentStatus = "Extracting required information from each profile. (it might take some time)";
         return profileLinks.stream().map((profileLink) -> scrapeProfile(profileLink)).collect(Collectors.toSet());
     }
 
@@ -92,7 +96,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private Set<String> retrieveProfileLinks(ProfileScraperParameters profileParameters) throws InterruptedException {
-
+        this.currentStatus = String.format("Retrieving %s profiles (it might take some time).", profileParameters.getTotalProfilesToFetch());
         Set<String> profileLinks = new HashSet<>();
 
         boolean isNextPageAvailable = true;
@@ -154,23 +158,38 @@ public class ProfileServiceImpl implements ProfileService {
             WebDriver driver = config.setupWebDriver(profileParameters.isHeadlessMode());
             this.driverHelper = new WebDriverHelper(driver);
 
+            this.isScraperRunning = true;
+            this.currentStatus = "Scraper started and logging into linkedin account.";
+
             boolean isLoggedIn = loginToLinkedIn(profileParameters.getEmail(), profileParameters.getPassword());
             if(!isLoggedIn) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong LinkedIn login credentials.");
             }
 
+            this.currentStatus = "Logged in to linkedin successfully.";
             Set<String> profileLinks = retrieveProfileLinks(profileParameters);
             Set<Profile> profiles = scrapProfiles(profileLinks);
 
             // save it to database
             saveToDatabase(profiles);
+            this.currentStatus = "Successfully saved fetch profiles into database... Shutting down scraper...";
 
         } catch (Exception e) {
-            e.printStackTrace();
-            // TODO: handle the exception better.
+            this.currentStatus = "Something unexpected went wrong... Shutting down scraper...";
+            this.isScraperRunning = false;
         } finally {
             driverHelper.getDriver().close();
         }
+    }
+
+    @Override
+    public String getStatus() {
+        return currentStatus;
+    }
+
+    @Override
+    public boolean isScraperCurrentlyRunning() {
+        return this.isScraperRunning;
     }
 
     // below all methods communicate to database
@@ -183,7 +202,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional
     private void saveToDatabase(Set<Profile> profiles) {
         try {
-
+            this.currentStatus = "Saving fetched profiles to database.";
             Search search = new Search();
             search.setSearchedAt(LocalDateTime.now());
             search.setId(new ObjectId().toString());
@@ -196,7 +215,6 @@ public class ProfileServiceImpl implements ProfileService {
 
             search.setProfiles(updatedProfiles.stream().toList());
             searchService.saveSearch(search);
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Fetched all profiles but unable to save it to database.");

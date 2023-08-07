@@ -16,36 +16,38 @@ $(document).ready(() => {
     });
 
     getProfilesSearches();
-
     document.getElementById("start-profile-scraper").addEventListener("click", (event) => startProfileScraper(event));
+
+    setInterval(getStatus, 500);
 
 })
 
 let profileSearchIds = new Set(); // To store existing profile search IDs
+let statusMessages = []
 
 const getProfilesSearches = () => {
     fetch('/api/v1/profiles-searches')
-    .then((response) => response.json()).then((data) => {
-        if (data.length < 1) {
-            document.getElementById("searches-table").style.display = "none";
-            document.getElementById("no-searches-indicator").style.display = "block";
-        }
-        const tableBody = document.getElementById("profiles-searches-tbody");
-        data.forEach((search, index) => {
-            if (!profileSearchIds.has(search.id)) {
-                profileSearchIds.add(search.id);
-                const newRow = tableBody.insertRow();
-                newRow.innerHTML = `
+        .then((response) => response.json()).then((data) => {
+            if (data.length < 1) {
+                document.getElementById("searches-table").style.display = "none";
+                document.getElementById("no-searches-indicator").style.display = "block";
+            }
+            const tableBody = document.getElementById("profiles-searches-tbody");
+            data.forEach((search, index) => {
+                if (!profileSearchIds.has(search.id)) {
+                    profileSearchIds.add(search.id);
+                    const newRow = tableBody.insertRow();
+                    newRow.innerHTML = `
                    <td>${index + 1}</td>
                    <td>${getFormattedDate(search.searchedAt)}</td>
                    <td><button class="btn btn-sm btn-primary" onclick="viewProfiles('${search.id}')" >View Profiles</button></td>
                `;
-            }
+                }
+            });
+        })
+        .catch((error) => {
+            console.log("Error fetching profiles searches:", error);
         });
-    })
-    .catch((error) => {
-        console.log("Error fetching profiles searches:", error);
-    });
 };
 
 
@@ -83,65 +85,101 @@ const getFormattedDate = (date) => {
 }
 
 const startProfileScraper = (event) => {
-        event.preventDefault();
+    event.preventDefault();
 
-        let selectedLocations = []
-        let selectedIndustries = []
+    let selectedLocations = []
+    let selectedIndustries = []
 
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-        const totalProfilesToFetch = document.getElementById("totalProfilesToFetch").value;
+    const totalProfilesToFetch = document.getElementById("totalProfilesToFetch").value;
 
-        const firstConnection = document.getElementById('con1').checked;
-        const secondConnection = document.getElementById('con2').checked;
-        const thirdConnection = document.getElementById('con3').checked;
+    const firstConnection = document.getElementById('con1').checked;
+    const secondConnection = document.getElementById('con2').checked;
+    const thirdConnection = document.getElementById('con3').checked;
 
-        console.log("first connection checked: ", firstConnection)
+    console.log("first connection checked: ", firstConnection)
 
-        const locations = document.getElementById("selected-locations").selectedOptions;
-        for(let option of locations) {
-          selectedLocations.push(option.value);
+    const locations = document.getElementById("selected-locations").selectedOptions;
+    for (let option of locations) {
+        selectedLocations.push(option.value);
+    }
+
+    const industries = document.getElementById("selected-industries").selectedOptions;
+    for (let option of industries) {
+        selectedIndustries.push(option.value)
+    }
+
+    const requestedData = {
+        email: email,
+        password: password,
+        totalProfilesToFetch: totalProfilesToFetch,
+        headlessMode: false,
+        filters: {
+            isFirstConnectionChecked: firstConnection,
+            isSecondConnectionChecked: secondConnection,
+            isThirdConnectionChecked: thirdConnection,
+            selectedLocations: selectedLocations,
+            selectedIndustries: selectedIndustries,
         }
+    };
 
-        const industries = document.getElementById("selected-industries").selectedOptions;
-        for(let option of industries) {
-          selectedIndustries.push(option.value)
-        }
 
-        const requestedData = {
-            email: email,
-            password: password,
-            totalProfilesToFetch: totalProfilesToFetch,
-            headlessMode: false,
-            filters: {
-                isFirstConnectionChecked: firstConnection,
-                isSecondConnectionChecked: secondConnection,
-                isThirdConnectionChecked: thirdConnection,
-                selectedLocations: selectedLocations,
-                selectedIndustries: selectedIndustries,
-            }
-        };
-    
-
-        fetch('/api/v1/profile-scraper', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestedData)
-        }).then((response) => response.text()).then((response) => {
-            getPostsSearches();
-        }).catch((error) => {
-            console.log(error);
-        })
+    fetch('/api/v1/profile-scraper', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestedData)
+    }).then((response) => response.text()).then((response) => {
+        getStatus();
+    }).catch((error) => {
+        console.log(error);
+    })
 }
 
 const copyToClipBoard = (id) => {
     const copyBtn = document.getElementById(id);
     const copyText = copyBtn.getAttribute("data-copytext");
     copyBtn.addEventListener("click", function () {
-    navigator.clipboard.writeText(copyText);
-    alert("Copied successfully!")
-});
+        navigator.clipboard.writeText(copyText);
+        alert("Copied successfully!")
+    });
+}
+
+const getStatus = () => {
+    fetch('/api/v1/status/profile-scraper').then((response) => response.json())
+        .then((response) => {
+
+            const statusDiv = document.getElementById("scraper-live-messages");
+
+            if (response.scraperRunning) {
+                document.getElementById("scraper-live-messages").innerHTML = '';
+                document.getElementById("start-profile-scraper").disabled = true;
+
+                if (!statusMessages.includes(response.status)) {
+                    statusMessages.push(response.status);
+                }
+
+                let formattedMessages = statusMessages.map((message, index) => `${index + 1}. ${message}`);
+                statusDiv.innerHTML = formattedMessages.join('<br>');
+
+                if (response.status == "Successfully saved fetch profiles into database... Shutting down scraper...") {
+                    document.getElementById("scraper-live-messages").innerHTML = 'Successfully saved fetch profiles into database.';
+                    document.getElementById("start-profile-scraper").disabled = false;
+                    getProfilesSearches();
+                    document.getElementById("scraper-live-messages").innerHTML = "Currently scraper is not running.";
+                    $('#profile-scraper-modal').modal("close");
+                    alert("Successfully fetched profiles and saved into database.");
+                }
+
+            } else {
+                document.getElementById("scraper-live-messages").innerHTML = 'Currently scraper is not running.';
+                document.getElementById("start-profile-scraper").disabled = false;
+            }
+
+        }).catch((error) => {
+            console.log("Error getting status: ", error)
+        })
 }
