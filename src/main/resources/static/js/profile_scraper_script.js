@@ -48,30 +48,13 @@ const getProfilesSearches = () => {
     });
 };
 
-const getPostsSearches = () => {
-    fetch('/profiles-searches').then((response) => response.json()).then((data) => {
-        const tableBody = document.getElementById("posts-searches-tbody");
-        data.forEach((search, index) => {
-            const newRow = tableBody.insertRow();
-            newRow.innerHTML = `
-           <td>${index + 1}</td>
-           <td>${getFormattedDate(search.searchedAt)}</td>
-           <td><button class="btn btn-sm btn-primary" onclick="viewPosts('${search.id}')" >View Posts</button></td>
-           `;
-        })
-    });
-}
 
 const viewProfiles = (searchId) => {
-    let profiles = new Set();
     fetch(`/api/v1/view-profiles/${searchId}`).then((response) => response.json()).then((data) => {
         const tableBody = document.getElementById("profiles-by-search-result");
         tableBody.innerHTML = ''; // Clear existing rows before adding new profiles
         data.forEach((profile, index) => {
-            console.log("typeof experience:", typeof(profile.experience), profile.experience)
-            if(!profiles.has(profile.email)) {
-                profiles.add(profile.email);
-                const newRow = tableBody.insertRow();
+            const newRow = tableBody.insertRow();
             newRow.innerHTML = `
             <td>${index + 1}</td>
             <td>${profile.name}</td>
@@ -82,7 +65,6 @@ const viewProfiles = (searchId) => {
             <td class="text-center" >${profile.isOpenToWork ? "Yes" : "No"}</td>
             <td><a href="${profile.link}"  target="_blank" >Open Profile</a></td>
             `;
-            }
         })
         $('#profiles-by-search-modal').modal("show");
     }).catch((error) => {
@@ -90,14 +72,6 @@ const viewProfiles = (searchId) => {
     })
 }
 
-
-const viewPosts = (searchId) => {
-    fetch(`/view-posts/${searchId}`).then((response) => response.json()).then((data) => {
-
-    }).catch((error) => {
-        console.log("Unable to get posts by search, error: ", error);
-    })
-}
 
 const getFormattedDate = (date) => {
     date = new Date(date);
@@ -156,15 +130,14 @@ const startProfileScraper = (event) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(requestedData)
-        }).then((response) => response.text).then((response) => {
-            getProfilesSearches();
+        }).then((response) => response.text()).then((response) => {
+            getPostsSearches();
         }).catch((error) => {
             console.log(error);
         })
 }
 
 const copyToClipBoard = (id) => {
-
     const copyBtn = document.getElementById(id);
     const copyText = copyBtn.getAttribute("data-copytext");
     copyBtn.addEventListener("click", function () {

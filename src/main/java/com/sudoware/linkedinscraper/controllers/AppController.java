@@ -2,6 +2,7 @@ package com.sudoware.linkedinscraper.controllers;
 
 import com.sudoware.linkedinscraper.helper.PostScraperParameters;
 import com.sudoware.linkedinscraper.helper.ProfileScraperParameters;
+import com.sudoware.linkedinscraper.models.Post;
 import com.sudoware.linkedinscraper.models.Profile;
 import com.sudoware.linkedinscraper.models.Search;
 import com.sudoware.linkedinscraper.services.PostService;
@@ -39,10 +40,22 @@ public class AppController {
         return ResponseEntity.ok(searches);
     }
 
+    @GetMapping(value = "/posts-searches", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getPostsSearches() {
+        List<Search> searches = searchService.getPostsSearches();
+        return ResponseEntity.ok(searches);
+    }
+
     @GetMapping(value = "/view-profiles/{searchId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getProfilesBySearch(@PathVariable("searchId") String id) {
        List<Profile> profiles = searchService.getProfilesBySearch(id);
        return ResponseEntity.ok(profiles);
+    }
+
+    @GetMapping(value = "/view-posts/{searchId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getPostsBySearch(@PathVariable("searchId") String id) {
+        List<Post> posts = searchService.getPostsBySearch(id);
+        return ResponseEntity.ok(posts);
     }
 
     @PostMapping(value = "/post-scraper", consumes = MediaType.APPLICATION_JSON_VALUE)

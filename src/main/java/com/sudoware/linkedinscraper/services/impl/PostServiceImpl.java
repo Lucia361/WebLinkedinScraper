@@ -32,8 +32,8 @@ public class PostServiceImpl implements PostService {
 
     private String getFilters(String datePosted, String sortBy) {
         StringBuilder filters = new StringBuilder();
-        filters.append(datePosted != null ? String.format("&datePosted=%22%s%22", datePosted) : "");
-        filters.append(sortBy != null ? String.format("&sortedBy=%22%s%22", sortBy) : "");
+        filters.append(datePosted != null ? "&datePosted=%22" + datePosted + "%22"  : "");
+        filters.append(sortBy != null ? "&sortedBy=%22" + sortBy + "%22" : "");
         return filters.toString();
     }
 

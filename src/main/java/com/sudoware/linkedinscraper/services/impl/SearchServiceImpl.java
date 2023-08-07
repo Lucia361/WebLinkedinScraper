@@ -34,11 +34,29 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
+    public List<Post> getPostsBySearch(String id) {
+        try {
+            return searchRepository.findById(id).get().getPosts();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to get posts by search id: " + id);
+        }
+    }
+
+    @Override
     public List<Search> getProfileSearches() {
         try {
-            return searchRepository.findAll().stream().filter((profile) -> profile.getProfiles() != null).collect(Collectors.toList());
+            return searchRepository.findAll().stream().filter((search) -> search.getProfiles() != null).collect(Collectors.toList());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to get profile searches");
+        }
+    }
+
+    @Override
+    public List<Search> getPostsSearches() {
+        try {
+            return searchRepository.findAll().stream().filter((search) -> search.getPosts() != null).collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to get posts searches");
         }
     }
 

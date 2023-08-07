@@ -11,7 +11,9 @@ public interface SearchService {
     List<Search> getSearches();
 
     List<Profile> getProfilesBySearch(String id);
+    List<Post> getPostsBySearch(String id);
     List<Search> getProfileSearches();
+    List<Search> getPostsSearches();
     List<Profile> getProfilesBySearchedAt(LocalDateTime searchedAt);
     List<Post> getPostsBySearchedAt(LocalDateTime searchedAt);
 

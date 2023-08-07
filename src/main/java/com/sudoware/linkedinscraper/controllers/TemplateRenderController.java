@@ -11,4 +11,7 @@ public class TemplateRenderController {
     public String renderHomePage() {
         return "index";
     }
+
+    @GetMapping("/post-scraper")
+    public String renderPostScraperPage() { return "post_scraper"; }
 }
