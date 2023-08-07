@@ -43,7 +43,6 @@ nav {
 }
 
 .btn {
-    padding: 10px 30px 10px 30px;
     transition: transform 0.3s ease !important;
 }
 
@@ -128,6 +127,10 @@ nav {
   overflow-y: auto !important;
 }
 
-.modal-body {
-  white-space: nowrap !important;
-}
+ /* .modal-body {
+  white-space: break-word !important;
+} */
+
+
+
+

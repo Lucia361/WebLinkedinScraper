@@ -54,7 +54,7 @@ public class ProfileServiceImpl implements ProfileService {
                 profileFilters.getIsThirdConnectionChecked()
         };
 
-        if (Arrays.stream(connectionChecked).anyMatch(c -> c)) {
+            if (Arrays.stream(connectionChecked).anyMatch(c -> c != null)) {
             connectionFilter.append("&network=%5B");
             boolean isFirst = true;
 

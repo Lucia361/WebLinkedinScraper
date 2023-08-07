@@ -26,6 +26,10 @@ let profileSearchIds = new Set(); // To store existing profile search IDs
 const getProfilesSearches = () => {
     fetch('/api/v1/profiles-searches')
     .then((response) => response.json()).then((data) => {
+        if (data.length < 1) {
+            document.getElementById("searches-table").style.display = "none";
+            document.getElementById("no-searches-indicator").style.display = "block";
+        }
         const tableBody = document.getElementById("profiles-searches-tbody");
         data.forEach((search, index) => {
             if (!profileSearchIds.has(search.id)) {
@@ -59,27 +63,33 @@ const getPostsSearches = () => {
 }
 
 const viewProfiles = (searchId) => {
+    let profiles = new Set();
     fetch(`/api/v1/view-profiles/${searchId}`).then((response) => response.json()).then((data) => {
-        console.log("profiles earches: ", data)
         const tableBody = document.getElementById("profiles-by-search-result");
+        tableBody.innerHTML = ''; // Clear existing rows before adding new profiles
         data.forEach((profile, index) => {
-            const newRow = tableBody.insertRow();
+            console.log("typeof experience:", typeof(profile.experience), profile.experience)
+            if(!profiles.has(profile.email)) {
+                profiles.add(profile.email);
+                const newRow = tableBody.insertRow();
             newRow.innerHTML = `
             <td>${index + 1}</td>
             <td>${profile.name}</td>
             <td>${profile.email}</td>
             <td>${profile.about}</td>
-            <td>${profile.experience}</td>
-            <td>${profile.education}</td>
-            <td>${profile.isOpenToWork}</td>
-            <td>${profile.link}</td>
+            <td class="experience-th" title="${profile.experience}"><button id="${index}-copyExperienceBtn" type="button" class="badge rounded-pill bg-success" data-copytext="${profile.experience}" onclick="copyToClipBoard('${index}-copyExperienceBtn')" >Copy experience</button></td>
+            <td class="education-th" title="${profile.education}" ><button id="${index}-copyEducationBtn" type="button" class="badge rounded-pill bg-success" data-copytext="${profile.education}" onclick="copyToClipBoard('${index}-copyEducationBtn')" >Copy education</button></td>
+            <td class="text-center" >${profile.isOpenToWork ? "Yes" : "No"}</td>
+            <td><a href="${profile.link}"  target="_blank" >Open Profile</a></td>
             `;
+            }
         })
         $('#profiles-by-search-modal').modal("show");
     }).catch((error) => {
         console.log("Unable to get profiles by search, error: ", error);
     })
 }
+
 
 const viewPosts = (searchId) => {
     fetch(`/view-posts/${searchId}`).then((response) => response.json()).then((data) => {
@@ -151,4 +161,14 @@ const startProfileScraper = (event) => {
         }).catch((error) => {
             console.log(error);
         })
+}
+
+const copyToClipBoard = (id) => {
+
+    const copyBtn = document.getElementById(id);
+    const copyText = copyBtn.getAttribute("data-copytext");
+    copyBtn.addEventListener("click", function () {
+    navigator.clipboard.writeText(copyText);
+    alert("Copied successfully!")
+});
 }
