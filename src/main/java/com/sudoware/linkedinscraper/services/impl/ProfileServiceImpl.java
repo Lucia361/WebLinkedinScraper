@@ -32,6 +32,7 @@ public class ProfileServiceImpl implements ProfileService {
     private WebDriverHelper driverHelper;
 
     private String currentStatus = "";
+    private final String DEFAULT_STATUS = "";
     private boolean isScraperRunning = false;
 
     private Set<Profile> scrapProfiles(Set<String> profileLinks) throws InterruptedException {
@@ -173,20 +174,24 @@ public class ProfileServiceImpl implements ProfileService {
             // save it to database
             saveToDatabase(profiles);
             this.currentStatus = "Successfully saved fetch profiles into database... Shutting down scraper...";
+            this.isScraperRunning = false;
 
         } catch (Exception e) {
             this.currentStatus = "Something unexpected went wrong... Shutting down scraper...";
             this.isScraperRunning = false;
+            driverHelper.getDriver().quit();
         } finally {
-            driverHelper.getDriver().close();
+            driverHelper.getDriver().quit();
         }
     }
 
     @Override
     public String getStatus() {
+        if (!isScraperRunning)
+            return DEFAULT_STATUS;
+
         return currentStatus;
     }
-
     @Override
     public boolean isScraperCurrentlyRunning() {
         return this.isScraperRunning;
