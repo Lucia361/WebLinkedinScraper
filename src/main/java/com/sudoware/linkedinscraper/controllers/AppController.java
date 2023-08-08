@@ -9,8 +9,6 @@ import com.sudoware.linkedinscraper.models.Search;
 import com.sudoware.linkedinscraper.services.PostService;
 import com.sudoware.linkedinscraper.services.ProfileService;
 import com.sudoware.linkedinscraper.services.SearchService;
-import org.apache.coyote.Response;
-import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +26,6 @@ public class AppController {
 
     private final String PROFILE_SCRAPER = "profile-scraper";
     private final String POST_SCRAPER = "post-scraper";
-    private final Object lock = new Object();
-    private StatusResponse statusResponse = new StatusResponse();
 
     @PostMapping(value = "/profile-scraper", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> profileScraper(@RequestBody ProfileScraperParameters profileParameters) {
@@ -69,30 +65,17 @@ public class AppController {
     }
 
     @GetMapping("/status/{scraper-type}")
-    public ResponseEntity<?> getStatus(@PathVariable("scraper-type") String scraperType)  {
-        try {
-            synchronized (lock) {
-                updateStatus(scraperType);
-                lock.wait();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    public ResponseEntity<?> getStatus(@PathVariable("scraper-type") String scraperType) throws InterruptedException {
+        StatusResponse statusResponse = new StatusResponse();
+        if(scraperType.equals(PROFILE_SCRAPER)) {
+            statusResponse.setStatus(profileService.getStatus());
+            statusResponse.setScraperRunning(profileService.isScraperCurrentlyRunning());
+        } else {
+            statusResponse.setStatus(postService.getStatus());
+            statusResponse.setScraperRunning(postService.isScraperIsCurrentlyRunning());
         }
         return ResponseEntity.ok(statusResponse);
     }
 
-    public StatusResponse updateStatus (String scraperType) {
-       synchronized (lock) {
-           if(scraperType.equals(PROFILE_SCRAPER)) {
-               statusResponse.setStatus(profileService.getStatus());
-               statusResponse.setScraperRunning(profileService.isScraperCurrentlyRunning());
-           } else {
-               statusResponse.setStatus(postService.getStatus());
-               statusResponse.setScraperRunning(postService.isScraperIsCurrentlyRunning());
-           }
-           lock.notifyAll();
-       }
-       return statusResponse;
-    }
 
 }

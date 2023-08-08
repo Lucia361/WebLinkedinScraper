@@ -174,7 +174,7 @@ public class ProfileServiceImpl implements ProfileService {
             // save it to database
             saveToDatabase(profiles);
             this.currentStatus = "Successfully saved fetch profiles into database... Shutting down scraper...";
-            this.isScraperRunning = false;
+            this.isScraperRunning  = false;
 
         } catch (Exception e) {
             this.currentStatus = "Something unexpected went wrong... Shutting down scraper...";
