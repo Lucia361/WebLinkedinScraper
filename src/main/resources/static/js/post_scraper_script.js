@@ -8,6 +8,7 @@ $('document').ready(() => {
 })
 
 let postSearchIds = new Set();
+let searches = new Set();
 let statusMessages = []
 
 const getPostsSearches = () => {
@@ -21,6 +22,7 @@ const getPostsSearches = () => {
         data.forEach((search, index) => {
            if(!postSearchIds.has(search.id)) {
             postSearchIds.add(search.id);
+            searches.add(search);
             const newRow = tableBody.insertRow();
             newRow.innerHTML = `
            <td>${index + 1}</td>
@@ -143,4 +145,27 @@ const getStatus = () => {
         }).catch((error) => {
             console.log("Error getting status: ", error)
         })
+}
+
+function filterSearches() {
+    const enteredKeywords = document.getElementById("search-title-input").value.toLowerCase();
+    const tableBody = document.getElementById("posts-searches-tbody");
+    console.log("entered keywords: ", enteredKeywords)
+
+    const searchesSet = Array.from(searches);
+    tableBody.innerHTML = '';
+
+    
+    searchesSet.forEach((search, index) => {
+        title = search.title.toLowerCase();
+        if (title.includes(enteredKeywords) || enteredKeywords === "") {
+            const newRow = tableBody.insertRow();
+                    newRow.innerHTML = `
+                   <td>${index + 1}</td>
+                   <td>${search.title}</td>
+                   <td>${getFormattedDate(search.searchedAt)}</td>
+                   <td><button class="btn btn-sm btn-primary" onclick="viewProfiles('${search.id}')" >View Profiles</button></td>
+               `;
+        }
+    });
 }

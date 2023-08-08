@@ -19,8 +19,8 @@ $(document).ready(() => {
     document.getElementById("start-profile-scraper").addEventListener("click", (event) => startProfileScraper(event));
     setInterval(getStatus, 300);
 
-    const searchInput = document.getElementById("search-title-input");
-    searchInput.addEventListener("keyup", filterSearches(searchInput.value.toLowerCase()));
+    // const searchInput = document.getElementById("search-title-input");
+   
 
 })
 let statusMessages = []
@@ -160,8 +160,6 @@ const copyToClipBoard = (id) => {
 const getStatus = () => {
     fetch('/api/v1/status/profile-scraper').then((response) => response.json())
         .then((response) => {
-            console.log(response);
-            console.log(response.scrapedSuccess)
 
             const statusDiv = document.getElementById("scraper-live-messages");
 
@@ -197,18 +195,25 @@ const getStatus = () => {
 }
 
     
-function filterSearches(enteredKeywords) {
-    console.log("keywords: ", enteredKeywords)
+function filterSearches() {
+    const enteredKeywords = document.getElementById("search-title-input").value;
     const tableBody = document.getElementById("profiles-searches-tbody");
+    console.log("entered keywords: ", enteredKeywords)
 
     const searchesSet = Array.from(searches);
+    tableBody.innerHTML = '';
+
     
-    searchesSet.forEach(search => {
-        const row = tableBody.querySelector(`td:nth-child(2):contains("${search.title}")`).parentNode;
+    searchesSet.forEach((search, index) => {
+        // const row = tableBody.querySelector(`td:nth-child(2):contains("${search.title}")`).parentNode;
         if (search.title.includes(enteredKeywords) || enteredKeywords === "") {
-            row.style.display = "table-row";
-        } else {
-            row.style.display = "none";
+            const newRow = tableBody.insertRow();
+                    newRow.innerHTML = `
+                   <td>${index + 1}</td>
+                   <td>${search.title}</td>
+                   <td>${getFormattedDate(search.searchedAt)}</td>
+                   <td><button class="btn btn-sm btn-primary" onclick="viewProfiles('${search.id}')" >View Profiles</button></td>
+               `;
         }
     });
 }
