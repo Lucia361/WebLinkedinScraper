@@ -90,7 +90,7 @@ public class Profile {
     @JsonIgnore
     private String fetchName() {
         WebElement profileNameElement = driverHelper.getElementIfExist(By.xpath("//h1[@class='text-heading-xlarge inline t-24 v-align-middle break-words']"));
-        if (profileNameElement == null) return "Unable to get profile name";
+        if (profileNameElement == null) return this.name = "Unable to get profile name";
 
         this.name = profileNameElement.getText();
         return this.name;
@@ -104,7 +104,7 @@ public class Profile {
     @JsonIgnore
     public String fetchAbout() {
         WebElement descriptionElement = driverHelper.getElementIfExist(By.xpath("//div[@class='text-body-medium break-words']"));
-        if(descriptionElement == null) return "Unable to get profile description";
+        if(descriptionElement == null) return this.about = "Unable to get profile description";
 
         this.about = removeDuplicateLines(descriptionElement.getText());
         return this.about;
@@ -118,7 +118,7 @@ public class Profile {
     @JsonIgnore
     public String fetchExperience() {
         WebElement experienceElement = driverHelper.getElementIfExist(By.id("experience"));
-        if(experienceElement == null) return "Unable to get experience";
+        if(experienceElement == null) return this.experience = "Unable to get experience";
 
         this.experience = removeDuplicateLines(experienceElement.findElement(By.xpath("./parent::*")).getText());
         return this.experience;
@@ -152,9 +152,8 @@ public class Profile {
             // TODO: better handle interruptedException
         }
         WebElement emailElement = driverHelper.getElementIfExist(By.xpath("//section[@class='pv-contact-info__contact-type ci-email']/div/a"));
-        if (emailElement != null)
-            return this.email = emailElement.getText();
-        return "Unable to get email address.";
+        if (emailElement != null) return this.email = emailElement.getText();
+        return this.email = "Unable to get email address.";
     }
 
     /**
