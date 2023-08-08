@@ -70,9 +70,11 @@ public class AppController {
         if(scraperType.equals(PROFILE_SCRAPER)) {
             statusResponse.setStatus(profileService.getStatus());
             statusResponse.setScraperRunning(profileService.isScraperCurrentlyRunning());
+            statusResponse.setScrapedSuccess(profileService.isScrapedSuccess());
         } else {
             statusResponse.setStatus(postService.getStatus());
             statusResponse.setScraperRunning(postService.isScraperIsCurrentlyRunning());
+            statusResponse.setScrapedSuccess(postService.isScrapedSuccess());
         }
         return ResponseEntity.ok(statusResponse);
     }

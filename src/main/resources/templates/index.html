@@ -29,8 +29,15 @@
 </nav>
 
 <div class="container-fluid mt-5">
-    <div class="text-end mb-3">
+    <div class="text-end">
         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#profile-scraper-modal">Open Profile Scraper</button>
+    </div>
+    <div class="text-start mb-3">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" id="search-title-input" placeholder="Search by title" class="form-control">
+            </div>
+        </div>
     </div>
     <div class="card">
         <div class="card-header h5">Searches</div>
@@ -40,7 +47,9 @@
                 <thead>
                   <tr>
                     <th scope="col">#Id</th>
-                    <th scope="col">Search on</th>
+                      <th scope="col">Search Title</th>
+
+                      <th scope="col">Searched at</th>
                     <th scope="col">Action</th>
                   </tr>
                 </thead>
@@ -82,6 +91,23 @@
                         <label for="totalProfilesToFetch">Total Profiles to fetch</label>
                     </div>
                 </div>
+
+                <div class="col-md-12">
+                    <span class="text-primary">Keywords. <i class="fas fa-circle-info" data-bs-toggle="tooltip" data-bs-title="Keywords e.g. JavaScript, Java and so on" data-bs-placement="top"></i></span>
+                    <div class="form-floating mb-3">
+                        <input class="form-control" type="text" id="keywords" placeholder="Keywords">
+                        <label for="keywords">Keywords</label>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <span class="text-primary">Search Title <i class="fas fa-circle-info" data-bs-toggle="tooltip" data-bs-title="Give this search a title so it'll be easy-to-search" data-bs-placement="top"></i></span>
+                    <div class="form-floating mb-3">
+                        <input class="form-control" type="text" id="title" placeholder="Search title">
+                        <label for="keywords">Search title</label>
+                    </div>
+                </div>
+                
                 <span class="text-primary h5">Additional Filters</span>
 
                 <hr>
@@ -179,6 +205,7 @@
 <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.min.js" integrity="sha384-Rx+T1VzGupg4BHQYs2gCW9It+akI2MM/mndMCy36UVfodzcJcF0GGLxZIzObiEfa" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <script src="js/profile_scraper_script.js"></script>
 
 </body>

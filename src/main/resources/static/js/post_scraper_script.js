@@ -69,6 +69,7 @@ const startPostScraper = (event) => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const keywords = document.getElementById('keywords').value;
+    const title = document.getElementById("title").value;
     const totalPostsToFetch = document.getElementById("totalPostsToFetch").value;
 
     const datePosted = document.getElementById("datePosted").value;
@@ -78,6 +79,7 @@ const startPostScraper = (event) => {
         email: email,
         password: password,
         keywords: keywords,
+        title: title,
         totalPostsToFetch: totalPostsToFetch,
         headlessMode: false,
         datePosted: datePosted,
@@ -90,7 +92,7 @@ const startPostScraper = (event) => {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(requestedData)
-    }).then((response) => response.text()).then((response) => {
+    }).then((response) => response.text()).then(() => {
         getStatus();
     })
 }
@@ -122,19 +124,21 @@ const getStatus = () => {
                 let formattedMessages = statusMessages.map((message, index) => `${index + 1}. ${message}`);
                 statusDiv.innerHTML = formattedMessages.join('<br>');
 
-                if (response.status == "Successfully saved fetched posts into database. Shutting down scraper") {
-                    getPostsSearches();
-                    document.getElementById("scraper-live-messages").innerHTML = 'Successfully saved fetch posts into database.';
-                    document.getElementById("start-post-scraper").disabled = false;
-                    document.getElementById("scraper-live-messages").innerHTML = "Currently scraper is not running.";
-                    $('#post-scraper-modal').modal("close");
-                    alert("Successfully fetched posts and saved into database.");
-                }
-
+                
             } else {
                 document.getElementById("scraper-live-messages").innerHTML = 'Currently scraper is not running.';
                 document.getElementById("start-post-scraper").disabled = false;
             }
+
+            if (response.scrapedSuccess) {
+                getPostsSearches();
+                document.getElementById("scraper-live-messages").innerHTML = 'Successfully saved fetch posts into database.';
+                document.getElementById("start-post-scraper").disabled = false;
+                document.getElementById("scraper-live-messages").innerHTML = "Currently scraper is not running.";
+                swal("Success", "Successfully fetched and saved posts to database.", "success");
+                $('#post-scraper-modal').modal("hide");
+            }
+
 
         }).catch((error) => {
             console.log("Error getting status: ", error)

@@ -13,5 +13,6 @@ public interface ProfileService {
 
     String getStatus();
     boolean isScraperCurrentlyRunning();
+    boolean isScrapedSuccess();
 
 }

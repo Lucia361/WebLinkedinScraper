@@ -17,13 +17,16 @@ $(document).ready(() => {
 
     getProfilesSearches();
     document.getElementById("start-profile-scraper").addEventListener("click", (event) => startProfileScraper(event));
+    setInterval(getStatus, 300);
 
-    setInterval(getStatus, 500);
+    const searchInput = document.getElementById("search-title-input");
+    searchInput.addEventListener("keyup", filterSearches(searchInput.value.toLowerCase()));
 
 })
-
-let profileSearchIds = new Set(); // To store existing profile search IDs
 let statusMessages = []
+let searches = new Set();
+let searchesId = new Set();
+
 
 const getProfilesSearches = () => {
     fetch('/api/v1/profiles-searches')
@@ -34,11 +37,13 @@ const getProfilesSearches = () => {
             }
             const tableBody = document.getElementById("profiles-searches-tbody");
             data.forEach((search, index) => {
-                if (!profileSearchIds.has(search.id)) {
-                    profileSearchIds.add(search.id);
+                if (!searchesId.has(search.id)) {
+                    searches.add(search);
+                    searchesId.add(search.id);
                     const newRow = tableBody.insertRow();
                     newRow.innerHTML = `
                    <td>${index + 1}</td>
+                   <td>${search.title}</td>
                    <td>${getFormattedDate(search.searchedAt)}</td>
                    <td><button class="btn btn-sm btn-primary" onclick="viewProfiles('${search.id}')" >View Profiles</button></td>
                `;
@@ -62,8 +67,8 @@ const viewProfiles = (searchId) => {
             <td>${profile.name}</td>
             <td>${profile.email}</td>
             <td>${profile.about}</td>
-            <td class="experience-th" title="${profile.experience}"><button id="${index}-copyExperienceBtn" type="button" class="badge rounded-pill bg-success" data-copytext="${profile.experience}" onclick="copyToClipBoard('${index}-copyExperienceBtn')" >Copy experience</button></td>
-            <td class="education-th" title="${profile.education}" ><button id="${index}-copyEducationBtn" type="button" class="badge rounded-pill bg-success" data-copytext="${profile.education}" onclick="copyToClipBoard('${index}-copyEducationBtn')" >Copy education</button></td>
+            <td class="experience-th" title="${profile.experience}"><button id="${index}-copyExperienceBtn" type="button" class="btn btn-success btn-sm mb-1" data-copytext="${profile.experience}" onclick="copyToClipBoard('${index}-copyExperienceBtn')" >Copy experience</button><button type="button" class="btn btn-sm btn-primary" >View Experience</button></td>
+            <td class="education-th" title="${profile.education}" ><button id="${index}-copyEducationBtn" type="button" class="btn btn-success btn-sm" data-copytext="${profile.education}" onclick="copyToClipBoard('${index}-copyEducationBtn')" >Copy education</button> <button type="button" class="btn btn-sm btn-primary mt-1">View Education</button></td>
             <td class="text-center" >${profile.isOpenToWork ? "Yes" : "No"}</td>
             <td><a href="${profile.link}"  target="_blank" >Open Profile</a></td>
             `;
@@ -92,6 +97,8 @@ const startProfileScraper = (event) => {
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    const keywords = document.getElementById("keywords").value;
+    const title = document.getElementById("title").value;
 
     const totalProfilesToFetch = document.getElementById("totalProfilesToFetch").value;
 
@@ -114,6 +121,8 @@ const startProfileScraper = (event) => {
     const requestedData = {
         email: email,
         password: password,
+        title: title,
+        keywords: keywords,
         totalProfilesToFetch: totalProfilesToFetch,
         headlessMode: false,
         filters: {
@@ -151,6 +160,8 @@ const copyToClipBoard = (id) => {
 const getStatus = () => {
     fetch('/api/v1/status/profile-scraper').then((response) => response.json())
         .then((response) => {
+            console.log(response);
+            console.log(response.scrapedSuccess)
 
             const statusDiv = document.getElementById("scraper-live-messages");
 
@@ -165,21 +176,39 @@ const getStatus = () => {
                 let formattedMessages = statusMessages.map((message, index) => `${index + 1}. ${message}`);
                 statusDiv.innerHTML = formattedMessages.join('<br>');
 
-                if (response.status == "Successfully saved fetch profiles into database... Shutting down scraper...") {
-                    document.getElementById("scraper-live-messages").innerHTML = 'Successfully saved fetch profiles into database.';
-                    document.getElementById("start-profile-scraper").disabled = false;
-                    getProfilesSearches();
-                    document.getElementById("scraper-live-messages").innerHTML = "Currently scraper is not running.";
-                    $('#profile-scraper-modal').modal("close");
-                    alert("Successfully fetched profiles and saved into database.");
-                }
-
             } else {
                 document.getElementById("scraper-live-messages").innerHTML = 'Currently scraper is not running.';
                 document.getElementById("start-profile-scraper").disabled = false;
             }
 
+            if (response.scrapedSuccess) {
+                document.getElementById("scraper-live-messages").innerHTML = 'Successfully saved fetch profiles into database.';
+                document.getElementById("start-profile-scraper").disabled = false;
+                getProfilesSearches();
+                document.getElementById("scraper-live-messages").innerHTML = "Currently scraper is not running.";
+                swal("Success", "Successfully fetched and saved profiles to database.", "success");
+                $('#profile-scraper-modal').modal("hide");
+
+            }
+
         }).catch((error) => {
             console.log("Error getting status: ", error)
         })
+}
+
+    
+function filterSearches(enteredKeywords) {
+    console.log("keywords: ", enteredKeywords)
+    const tableBody = document.getElementById("profiles-searches-tbody");
+
+    const searchesSet = Array.from(searches);
+    
+    searchesSet.forEach(search => {
+        const row = tableBody.querySelector(`td:nth-child(2):contains("${search.title}")`).parentNode;
+        if (search.title.includes(enteredKeywords) || enteredKeywords === "") {
+            row.style.display = "table-row";
+        } else {
+            row.style.display = "none";
+        }
+    });
 }

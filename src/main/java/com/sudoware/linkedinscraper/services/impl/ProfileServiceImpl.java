@@ -34,6 +34,7 @@ public class ProfileServiceImpl implements ProfileService {
     private String currentStatus = "";
     private final String DEFAULT_STATUS = "";
     private boolean isScraperRunning = false;
+    private boolean scrapedSuccess = false;
 
     private Set<Profile> scrapProfiles(Set<String> profileLinks) throws InterruptedException {
         this.currentStatus = "Extracting required information from each profile. (it might take some time)";
@@ -105,11 +106,12 @@ public class ProfileServiceImpl implements ProfileService {
         int profilesRetrieved = 0;
         long totalProfilesToRetrieve = profileParameters.getTotalProfilesToFetch();
         String filters = getFilters(profileParameters.getFilters());
+        String keywords = profileParameters.getKeywords();
 
 
         while ((isNextPageAvailable && profilesRetrieved < totalProfilesToRetrieve) || (isNextPageAvailable && totalProfilesToRetrieve == -1)) {
             // going to search results
-            driverHelper.getDriver().get(String.format("https://www.linkedin.com/search/results/people/?page=%d%s", pageToGoNext, filters));
+            driverHelper.getDriver().get(String.format("https://www.linkedin.com/search/results/people/?page=%d%s&keywords=%s", pageToGoNext, filters, keywords));
             Thread.sleep(1000);
             pageToGoNext++;
 
@@ -172,29 +174,39 @@ public class ProfileServiceImpl implements ProfileService {
             Set<Profile> profiles = scrapProfiles(profileLinks);
 
             // save it to database
-            saveToDatabase(profiles);
+            saveToDatabase(profiles, profileParameters.getTitle());
             this.currentStatus = "Successfully saved fetch profiles into database... Shutting down scraper...";
+            this.scrapedSuccess = true;
             this.isScraperRunning  = false;
 
         } catch (Exception e) {
-            this.currentStatus = "Something unexpected went wrong... Shutting down scraper...";
-            this.isScraperRunning = false;
             driverHelper.getDriver().quit();
+            setDefaultStatus();
         } finally {
             driverHelper.getDriver().quit();
+            setDefaultStatus();
         }
     }
 
     @Override
     public String getStatus() {
-        if (!isScraperRunning)
+        if (!isScraperRunning && !scrapedSuccess)
             return DEFAULT_STATUS;
-
         return currentStatus;
     }
     @Override
     public boolean isScraperCurrentlyRunning() {
         return this.isScraperRunning;
+    }
+
+    @Override
+    public boolean isScrapedSuccess() {
+        return scrapedSuccess;
+    }
+    private void setDefaultStatus() {
+        this.currentStatus = "";
+        this.isScraperRunning = false;
+        this.scrapedSuccess = false;
     }
 
     // below all methods communicate to database
@@ -205,11 +217,12 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Transactional
-    private void saveToDatabase(Set<Profile> profiles) {
+    private void saveToDatabase(Set<Profile> profiles, String searchTitle) {
         try {
             this.currentStatus = "Saving fetched profiles to database.";
             Search search = new Search();
             search.setSearchedAt(LocalDateTime.now());
+            search.setTitle(searchTitle);
             search.setId(new ObjectId().toString());
 
             Set<Profile> updatedProfiles = profiles.stream()

@@ -15,6 +15,7 @@ import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -31,7 +32,9 @@ public class PostServiceImpl implements PostService {
     private WebDriverHelper driverHelper;
 
     private String currentStatus = "";
+    private final String DEFAULT_STATUS = "";
     private boolean isScraperRunning = false;
+    private boolean scrapedSuccess = false;
 
     private String getFilters(String datePosted, String sortBy) {
         StringBuilder filters = new StringBuilder();
@@ -119,20 +122,23 @@ public class PostServiceImpl implements PostService {
             Set<Post> posts = fetchPosts(postsParameters);
 
             // save fetched posts to database
-            saveToDatabase(posts);
+            saveToDatabase(posts, postsParameters.getTitle());
             this.currentStatus = "Successfully saved fetched posts into database. Shutting down scraper";
             this.isScraperRunning = false;
+            this.scrapedSuccess = true;
 
         } catch (Exception e) {
-            this.currentStatus = "Something unexpected went wrong. Shutting down scraper...";
-            this.isScraperRunning = false;
+            setDefaultStatus();
         } finally {
             driverHelper.getDriver().close();
+            setDefaultStatus();
         }
     }
 
     @Override
     public String getStatus() {
+        if (!isScraperRunning && !scrapedSuccess) return DEFAULT_STATUS;
+        if(scrapedSuccess) scrapedSuccess = false;
         return currentStatus;
     }
 
@@ -141,13 +147,26 @@ public class PostServiceImpl implements PostService {
         return this.isScraperRunning;
     }
 
+    @Override
+    public boolean isScrapedSuccess() {
+        return false;
+    }
+
+    private void setDefaultStatus() {
+        this.currentStatus = "";
+        this.isScraperRunning = false;
+        this.scrapedSuccess = false;
+    }
+
     // below all methods communicate to database.
 
-    private void saveToDatabase (Set<Post> posts) {
+    @Transactional
+    private void saveToDatabase (Set<Post> posts, String searchTitle) {
         try {
             this.currentStatus = "Saving fetched posts to database...";
             Search search = new Search();
             search.setSearchedAt(LocalDateTime.now());
+            search.setTitle(searchTitle);
             search.setId(new ObjectId().toString());
 
             Set<Post> updatedPosts = posts.stream().peek((post) -> post.setSearch(search)).collect(Collectors.toSet());

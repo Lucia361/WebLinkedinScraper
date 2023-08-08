@@ -22,6 +22,7 @@ public class Search {
     @Id
     private String id;
     private LocalDateTime searchedAt;
+    private String title;
 
     @DBRef
     @Nullable
