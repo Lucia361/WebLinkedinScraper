@@ -46,7 +46,7 @@ public class PostServiceImpl implements PostService {
     private Set<Post> fetchPosts(PostScraperParameters postParameters) throws InterruptedException {
         this.currentStatus = String.format("Retrieving %s posts. (it might take some time)", postParameters.getTotalPostsToFetch());
 
-        Set<Post> posts = new HashSet<>();
+        final Set<Post> posts = new HashSet<>();
 
         int pageToGoNext = 1;
         int postsRetrieved = 0;
@@ -69,10 +69,15 @@ public class PostServiceImpl implements PostService {
             List<WebElement> postsElements = driverHelper.getElementsIfExists(By.xpath("//div[contains(@class, 'feed-shared-update-v2 feed-shared-update-v2--minimal-padding')]"));
             this.currentStatus = "Extracting required information from each post.. (it might take some times)";
 
-            posts = postsElements.stream().map((postElement) -> extractPostInformation(postElement, finalKeywords)).collect(Collectors.toSet());
-            postsRetrieved = posts.size();
+            for (WebElement postElement : postsElements) {
+                Post post = extractPostInformation(postElement, finalKeywords);
+                posts.add(post);
+                postsRetrieved++;
+                if(postsRetrieved == totalPostsToRetrieve && totalPostsToRetrieve != -1) {
+                    break;
+                }
+            }
             pageToGoNext++;
-
         }
         return posts;
     }
@@ -128,9 +133,10 @@ public class PostServiceImpl implements PostService {
             this.scrapedSuccess = true;
 
         } catch (Exception e) {
+            driverHelper.getDriver().quit();
             setDefaultStatus();
         } finally {
-            driverHelper.getDriver().close();
+            driverHelper.getDriver().quit();
             setDefaultStatus();
         }
     }

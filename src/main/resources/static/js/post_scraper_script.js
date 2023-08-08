@@ -4,7 +4,7 @@ $('document').ready(() => {
     getPostsSearches();
     
     document.getElementById("start-post-scraper").addEventListener("click", (event) => startPostScraper(event));
-    setInterval(getStatus, 500);
+    setInterval(getStatus, 100);
 })
 
 let postSearchIds = new Set();
@@ -26,6 +26,7 @@ const getPostsSearches = () => {
             const newRow = tableBody.insertRow();
             newRow.innerHTML = `
            <td>${index + 1}</td>
+           <td>${search.title}</td>
            <td>${getFormattedDate(search.searchedAt)}</td>
            <td><button class="btn btn-sm btn-primary" onclick="viewPosts('${search.id}')" >View Posts</button></td>
            `;

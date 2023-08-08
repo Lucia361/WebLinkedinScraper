@@ -17,7 +17,7 @@ $(document).ready(() => {
 
     getProfilesSearches();
     document.getElementById("start-profile-scraper").addEventListener("click", (event) => startProfileScraper(event));
-    setInterval(getStatus, 300);
+    setInterval(getStatus, 200);
 
     // const searchInput = document.getElementById("search-title-input");
    
@@ -196,7 +196,7 @@ const getStatus = () => {
 
     
 function filterSearches() {
-    const enteredKeywords = document.getElementById("search-title-input").value;
+    const enteredKeywords = document.getElementById("search-title-input").value.toLowerCase();
     const tableBody = document.getElementById("profiles-searches-tbody");
     console.log("entered keywords: ", enteredKeywords)
 
@@ -205,8 +205,8 @@ function filterSearches() {
 
     
     searchesSet.forEach((search, index) => {
-        // const row = tableBody.querySelector(`td:nth-child(2):contains("${search.title}")`).parentNode;
-        if (search.title.includes(enteredKeywords) || enteredKeywords === "") {
+        title = search.title.toLowerCase();
+        if (title.includes(enteredKeywords) || enteredKeywords === "") {
             const newRow = tableBody.insertRow();
                     newRow.innerHTML = `
                    <td>${index + 1}</td>
